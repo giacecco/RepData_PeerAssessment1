@@ -116,8 +116,8 @@ plot(
     steps_time_series$steps,
     type = 'l',
     main = "Mean number of steps taken, by 5-minute interval",
-    xlab = "Interval",
-    ylab = "Mean number of steps")
+    xlab = "Interval no.",
+    ylab = "Mean number of steps\nper interval")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
@@ -290,20 +290,20 @@ steps_time_series_new <- fixed_data %>%
         summarise(steps = mean(steps))
 par(mfrow = c(2, 1))
 plot(
-    steps_time_series_new[steps_time_series_new$type_of_day == "weekday", ]$interval, 
-    steps_time_series_new[steps_time_series_new$type_of_day == "weekday", ]$steps,
+    steps_time_series_new[steps_time_series_new$type_of_day == "weekend", ]$interval, 
+    steps_time_series_new[steps_time_series_new$type_of_day == "weekend", ]$steps,
     type = 'l',
-    main = "Weekdays",
-    xlab = "Interval",
+    main = "weekend",
+    xlab = "Interval no.",
     ylab = "Mean number of steps",
     xlim = c(0, max(steps_time_series_new$interval)),
     ylim = c(0, max(steps_time_series_new$steps)))
 plot(
-    steps_time_series_new[steps_time_series_new$type_of_day == "weekend", ]$interval, 
-    steps_time_series_new[steps_time_series_new$type_of_day == "weekend", ]$steps,
+    steps_time_series_new[steps_time_series_new$type_of_day == "weekday", ]$interval, 
+    steps_time_series_new[steps_time_series_new$type_of_day == "weekday", ]$steps,
     type = 'l',
-    main = "Weekend",
-    xlab = "Interval",
+    main = "weekday",
+    xlab = "Interval no.",
     ylab = "Mean number of steps",
     xlim = c(0, max(steps_time_series_new$interval)),
     ylim = c(0, max(steps_time_series_new$steps)))
