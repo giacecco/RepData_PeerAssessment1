@@ -1,0 +1,269 @@
+# Reproducible Research: Peer Assessment 1
+
+## Loading all required libraries and defining the general settings
+
+
+```r
+library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
+library(knitr)
+library(scales)
+```
+
+## Defining the general settings
+
+```r
+# override knitr's default inline settings to display numbers using the US 
+# standard, with commas as the thousands separator and dot for decimals, e.g.
+# 1,234.56
+knit_hooks$set(inline = function(x) {
+        prettyNum(x, big.mark = ".", decimal.mark = ",")
+})
+```
+
+## Loading and preprocessing the data
+
+### Loading the data
+
+
+```r
+data <- read.table(unz("activity.zip", "activity.csv"), header=T, sep=",")
+```
+
+Note that, at this stage, the text of the exercise does **not** want me to 
+address the issue caused by the NA values in the "steps" column.
+
+### Process/transform the data (if necessary) into a format suitable for your analysis
+
+I interpret the columns according to data type. I use, respectively, Numeric,
+POSIXct and Numeric.
+
+
+```r
+data$steps <- as.numeric(data$steps)
+data$date <- as.POSIXct(data$date)
+data$interval <- as.numeric(data$interval)
+```
+
+## What is the mean total number of steps taken per day?
+
+### Calculate the total number of steps taken per day
+
+As requested by the exercise, missing values are ignored.
+
+
+```r
+steps_per_day <- data %>% 
+        filter(!is.na(steps)) %>% 
+        group_by(date) %>% 
+        summarise(steps = sum(steps))
+```
+
+### Make a histogram of the total number of steps taken each day
+
+
+```r
+hist(steps_per_day$steps, 
+        main = "Histogram of the total number of steps taken each day", 
+        xlab = "Total steps per day")
+```
+
+![](PA1_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
+### Calculate and report the mean and median of the total number of steps taken per day
+
+
+```r
+mean_steps <- mean(steps_per_day$steps)
+median_steps <- median(steps_per_day$steps)
+```
+
+The mean total number of steps taken per day is 
+    **10.766,19**, the median 
+    **10.765**.
+
+## What is the average daily activity pattern?
+
+### Make a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+
+
+```r
+steps_time_series <- data %>% 
+        filter(!is.na(steps)) %>% 
+        group_by(interval) %>% 
+        summarise(steps = mean(steps))
+plot(
+    steps_time_series$interval, 
+    steps_time_series$steps,
+    type = 'l',
+    main = "Mean number of steps taken, by 5-minute interval",
+    xlab = "Interval",
+    ylab = "Mean number of steps")
+```
+
+![](PA1_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+
+### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+
+The 5-minute interval that contains, on average, the maximum number of steps is
+interval no. 
+**835**.
+
+## Inputing missing values
+
+### Calculate and report the total number of missing values in the dataset 
+
+The total number of missing values in the source data, by column, is:
+
+
+```r
+sapply(data[], function(y) sum(length(which(is.na(y)))))
+```
+
+```
+##    steps     date interval 
+##     2304        0        0
+```
+
+### Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc.
+
+First I look for patterns in the missing data, starting to see which dates were
+most affected.
+
+
+```r
+missing_data <- data %>% 
+        group_by(date) %>% 
+        summarise(no_of_nas = sum(is.na(steps)))
+plot(missing_data$date, 
+        missing_data$no_of_nas,
+        main = "Number of missing intervals by date",
+        xlab = "Date",
+        ylab = "Number of missing intervals"
+)
+```
+
+![](PA1_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+
+The plot shows that the days where the data is missing have the same number of 
+missing recordings, that is 288. This number 
+represents an entire day of missing data, as the number of intervals in one day 
+is 24 hours x 60 minutes / 5 minutes = 288.
+
+The days of the week the data is missing appear not to follow a pattern, as 
+we have missing days on every day of the week but for Tuesdays. The table below shows the number of occurrences.
+
+
+```r
+table(weekdays(missing_data[missing_data$no_of_nas == 288,]$date))
+```
+
+```
+## 
+##    Friday    Monday  Saturday    Sunday  Thursday Wednesday 
+##         2         2         1         1         1         1
+```
+
+Given the above premises, we can make the following two assumptions:
+
+1. the missing data does not correspond to the subject "staying still" and not
+making any steps, but was simply not recorded or lost, and
+
+2. we can presume that the subject behaviour in each of the missing days was
+equivalent to the behaviour on the same weekday in other weeks.
+
+Because of the above, the strategy I adopt in the following is to replace the
+missing data with the average number of steps, by interval, made on the same
+weekday on days for which data is available.
+
+### Create a new dataset that is equal to the original dataset but with the missing data filled in.
+
+
+```r
+# this calculates the mean number of steps done in an interval for each weekday
+mean_interval_steps_by_weekday <- data %>%
+        filter(!is.na(steps)) %>% 
+        mutate(weekday = weekdays(date)) %>%
+        group_by(weekday, interval) %>% 
+        summarise(mean_steps = mean(steps))
+# this creates a data frame equivalent to the original data, where the actual
+# data is replaced by the means calculated above
+fixed_data <- data %>% 
+        mutate(weekday = weekdays(date)) %>%
+        left_join(mean_interval_steps_by_weekday, by = c("interval", "weekday"))
+fixed_data$fixed_steps <- ifelse(
+        is.na(fixed_data$steps), 
+        fixed_data$mean_steps, 
+        fixed_data$steps
+)
+# I select and rename the column so that the resulting table is equal to the 
+# original dataset but with the missing data filled in
+fixed_data <- fixed_data %>% 
+        select(fixed_steps, date, interval) %>%
+        rename(steps = fixed_steps)
+```
+
+### Make a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+
+
+```r
+steps_per_day_fixed <- fixed_data %>% 
+        filter(!is.na(steps)) %>% 
+        group_by(date) %>% 
+        summarise(steps = sum(steps))
+hist(steps_per_day$steps, 
+        main = "Histogram of the total number of steps taken each day", 
+        xlab = "Total steps per day")
+```
+
+![](PA1_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+
+```r
+mean_steps_fixed <- mean(steps_per_day_fixed$steps)
+mean_steps_variation <- mean_steps_fixed / mean_steps
+mean_steps_variation <- ifelse(
+    mean_steps_variation > 1, 
+    mean_steps_variation - 1,  
+    1 - mean_steps_variation)
+median_steps_fixed <- median(steps_per_day_fixed$steps)
+median_steps_variation <- median_steps_fixed / median_steps
+median_steps_variation <- ifelse(
+    median_steps_variation > 1, 
+    median_steps_variation - 1,  
+    1 - median_steps_variation)
+```
+
+The mean total number of steps taken per day is 
+        **10.821,21** 
+        vs the original value of
+        **10.766,19** 
+        (+0.511%), 
+        while the median is
+        **11.015**
+        vs the original value of
+        **10.765**
+        (+2.32%).
+
+The values differ from the estimates from the first part of the assingnment, but,
+as intended, not substantially, thanks to the strategy I adopted.
+    
+## Are there differences in activity patterns between weekdays and weekends?

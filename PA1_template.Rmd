@@ -5,10 +5,22 @@ output:
     keep_md: true
 ---
 
+## Loading the data
 
-## Loading and preprocessing the data
+```{r}
+data <- read.table(unz("activity.zip", "activity.csv"), header=T, sep=",")
+```
 
+## Replacing any NA's in the *steps* column assuming they are intended to be considered as zeroes
+```{r}
+data$steps <- ifelse(is.na(data$steps), 0, data$steps)
+```
 
+## Interpreting the columns according the data type they were intended for,respectively Numeric, ***date*** and Numeric
+```{r}
+data$steps <- as.numeric(data$steps)
+data$interval <- as.numeric(data$interval)
+```
 
 ## What is mean total number of steps taken per day?
 
