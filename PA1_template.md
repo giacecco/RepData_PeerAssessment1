@@ -87,7 +87,7 @@ hist(steps_per_day$steps,
         xlab = "Total steps per day")
 ```
 
-![](PA1_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
 ### Calculate and report the mean and median of the total number of steps taken per day
 
@@ -120,7 +120,7 @@ plot(
     ylab = "Mean number of steps")
 ```
 
-![](PA1_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 ### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
@@ -162,7 +162,7 @@ plot(missing_data$date,
 )
 ```
 
-![](PA1_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)<!-- -->
 
 The plot shows that the days where the data is missing have the same number of 
 missing recordings, that is 288. This number 
@@ -235,7 +235,7 @@ hist(steps_per_day$steps,
         xlab = "Total steps per day")
 ```
 
-![](PA1_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-13-1.png)<!-- -->
 
 ```r
 mean_steps_fixed <- mean(steps_per_day_fixed$steps)
@@ -295,14 +295,21 @@ plot(
     type = 'l',
     main = "Weekdays",
     xlab = "Interval",
-    ylab = "Mean number of steps")
+    ylab = "Mean number of steps",
+    xlim = c(0, max(steps_time_series_new$interval)),
+    ylim = c(0, max(steps_time_series_new$steps)))
 plot(
     steps_time_series_new[steps_time_series_new$type_of_day == "weekend", ]$interval, 
     steps_time_series_new[steps_time_series_new$type_of_day == "weekend", ]$steps,
     type = 'l',
     main = "Weekend",
     xlab = "Interval",
-    ylab = "Mean number of steps")
+    ylab = "Mean number of steps",
+    xlim = c(0, max(steps_time_series_new$interval)),
+    ylim = c(0, max(steps_time_series_new$steps)))
 ```
 
-![](PA1_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
+
+The graphs show that physical activity during the weekend is more evenly 
+distributed than during weekdays, and starts later in the morning.

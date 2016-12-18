@@ -247,14 +247,18 @@ plot(
     type = 'l',
     main = "Weekdays",
     xlab = "Interval",
-    ylab = "Mean number of steps")
+    ylab = "Mean number of steps",
+    xlim = c(0, max(steps_time_series_new$interval)),
+    ylim = c(0, max(steps_time_series_new$steps)))
 plot(
     steps_time_series_new[steps_time_series_new$type_of_day == "weekend", ]$interval, 
     steps_time_series_new[steps_time_series_new$type_of_day == "weekend", ]$steps,
     type = 'l',
     main = "Weekend",
     xlab = "Interval",
-    ylab = "Mean number of steps")
+    ylab = "Mean number of steps",
+    xlim = c(0, max(steps_time_series_new$interval)),
+    ylim = c(0, max(steps_time_series_new$steps)))
 ```
 
 The graphs show that physical activity during the weekend is more evenly 
