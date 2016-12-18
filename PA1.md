@@ -231,7 +231,7 @@ steps_per_day_fixed <- fixed_data %>%
         group_by(date) %>% 
         summarise(steps = sum(steps))
 hist(steps_per_day$steps, 
-        main = "Histogram of the total number of steps taken each day", 
+        main = "Histogram of the total number of steps taken each day\n(corrected for missing data)",
         xlab = "Total steps per day")
 ```
 
@@ -267,3 +267,42 @@ The values differ from the estimates from the first part of the assingnment, but
 as intended, not substantially, thanks to the strategy I adopted.
     
 ## Are there differences in activity patterns between weekdays and weekends?
+
+### Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
+
+
+```r
+fixed_data <- fixed_data %>%
+        mutate(type_of_day = ifelse(
+                weekdays(date) %in% c("Saturday", "Sunday"),
+                "weekend",
+                "weekday"))
+fixed_data$type_of_day <- as.factor(fixed_data$type_of_day)
+```
+
+### Make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis)
+
+
+
+```r
+steps_time_series_new <- fixed_data %>% 
+        group_by(type_of_day, interval) %>% 
+        summarise(steps = mean(steps))
+par(mfrow = c(2, 1))
+plot(
+    steps_time_series_new[steps_time_series_new$type_of_day == "weekday", ]$interval, 
+    steps_time_series_new[steps_time_series_new$type_of_day == "weekday", ]$steps,
+    type = 'l',
+    main = "Weekdays",
+    xlab = "Interval",
+    ylab = "Mean number of steps")
+plot(
+    steps_time_series_new[steps_time_series_new$type_of_day == "weekend", ]$interval, 
+    steps_time_series_new[steps_time_series_new$type_of_day == "weekend", ]$steps,
+    type = 'l',
+    main = "Weekend",
+    xlab = "Interval",
+    ylab = "Mean number of steps")
+```
+
+![](PA1_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
